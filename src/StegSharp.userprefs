@@ -1,0 +1,13 @@
+﻿<Properties StartupItem="StegSharp/StegSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="StegSharp/Program.cs">
+    <Files>
+      <File FileName="StegSharp/Program.cs" Line="22" Column="63" />
+      <File FileName="StegSharp/Steganography.cs" Line="11" Column="10" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
