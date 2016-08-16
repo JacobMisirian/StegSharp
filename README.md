@@ -1,0 +1,2 @@
+# StegSharp
+Steganography Library C#
