@@ -1,5 +1,0 @@
-/home/reagan/StegSharp/StegSharp/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
-/home/reagan/StegSharp/StegSharp/bin/Debug/StegSharp.exe.mdb
-/home/reagan/StegSharp/StegSharp/bin/Debug/StegSharp.exe
-/home/reagan/StegSharp/StegSharp/obj/x86/Debug/StegSharp.exe
-/home/reagan/StegSharp/StegSharp/obj/x86/Debug/StegSharp.exe.mdb

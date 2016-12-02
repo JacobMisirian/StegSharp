@@ -1,102 +1,136 @@
-﻿using System;
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace StegSharp
 {
     public class Steganography
     {
-        public Bitmap Encode(Bitmap source, byte[] data)
+        public byte[] DecryptBitmap(Bitmap image, Bitmap original)
         {
-            Bitmap result = new Bitmap(source.Width, source.Height);
+            byte[] length = new byte[4];
+            int lengthPos = 0;
+
+            BitArray buffer = new BitArray(8);
             int bitPos = 0;
-            var bitArray = new BitArray(encodeDataWithLength(data));
 
-            for (int x = 0; x < source.Width; x++)
+            for (int j = 0; j < 8; j++)
             {
-                for (int y = 0; y < source.Height; y++)
+                var imagePixel = image.GetPixel(0, j);
+                var originalPixel = original.GetPixel(0, j);
+
+                buffer[bitPos++] = decryptByte(imagePixel.A, originalPixel.A);
+                buffer[bitPos++] = decryptByte(imagePixel.R, originalPixel.R);
+                buffer[bitPos++] = decryptByte(imagePixel.G, originalPixel.G);
+                buffer[bitPos++] = decryptByte(imagePixel.B, originalPixel.B);
+
+                if (bitPos >= 8)
                 {
-                    var sourcePixel = source.GetPixel(x, y);
-                    byte a = sourcePixel.A;
-                    byte r = sourcePixel.R;
-                    byte g = sourcePixel.G;
-                    byte b = sourcePixel.B;
-                    if (bitPos < bitArray.Length)
+                    bitPos = 0;
+                    buffer.CopyTo(length, lengthPos++);
+                }
+            }
+
+            return decryptBitmap(image, original, BitConverter.ToInt32(length, 0), 0, 8);
+        }
+
+        private byte[] decryptBitmap(Bitmap image, Bitmap original, int byteCount, int x, int y)
+        {
+            byte[] result = new byte[byteCount];
+            int bytePos = 0;
+
+            BitArray buffer = new BitArray(8);
+            int bitPos = 0;
+
+            for (int i = x; i < image.Width && bytePos < byteCount; i++)
+            {
+                for (int j = i == x ? y : 0; j < image.Height && bytePos < byteCount; j++)
+                {
+                    var imagePixel = image.GetPixel(i, j);
+                    var originalPixel = original.GetPixel(i, j);
+
+                    buffer[bitPos++] = decryptByte(imagePixel.A, originalPixel.A);
+                    buffer[bitPos++] = decryptByte(imagePixel.R, originalPixel.R);
+                    buffer[bitPos++] = decryptByte(imagePixel.G, originalPixel.G);
+                    buffer[bitPos++] = decryptByte(imagePixel.B, originalPixel.B);
+
+                    if (bitPos >= 8)
                     {
-                        a = encryptByte(a, bitArray.Get(bitPos++));
-                        r = encryptByte(r, bitArray.Get(bitPos++));
-                        g = encryptByte(g, bitArray.Get(bitPos++));
-                        b = encryptByte(b, bitArray.Get(bitPos++));
+                        bitPos = 0;
+                        buffer.CopyTo(result, bytePos++);
                     }
-                    result.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+                }
+            }
+            return result;
+        }
+
+        public Bitmap EncryptBitmap(Bitmap image, byte[] data)
+        {
+            byte[] dataWithLength = new byte[data.Length + 4];
+            BitConverter.GetBytes(data.Length).CopyTo(dataWithLength, 0);
+            data.CopyTo(dataWithLength, 4);
+
+            return encryptBitmap(image, dataWithLength);
+        }
+
+        private Bitmap encryptBitmap(Bitmap image, byte[] data)
+        {
+            BitArray bits = new BitArray(data);
+            int bitPos = 0;
+
+            Bitmap result = new Bitmap(image.Width, image.Height);
+
+            for (int i = 0; i < image.Width; i++)
+            {
+                for (int j = 0; j < image.Height; j++)
+                {
+                    var pixel = image.GetPixel(i, j);
+
+                    var a = encryptRandomByte(pixel.A);
+                    var r = encryptRandomByte(pixel.R);
+                    var g = encryptRandomByte(pixel.G);
+                    var b = encryptRandomByte(pixel.B);
+
+                    if (bitPos < bits.Length)
+                    {
+                        a = encryptByte(pixel.A, bits.Get(bitPos++));
+                        r = encryptByte(pixel.R, bits.Get(bitPos++));
+                        g = encryptByte(pixel.G, bits.Get(bitPos++));
+                        b = encryptByte(pixel.B, bits.Get(bitPos++));
+                    }
+                    result.SetPixel(i, j, Color.FromArgb(a, r, g, b));
                 }
             }
 
             return result;
         }
 
-        private byte encryptByte(byte b, bool bit)
-        {
-            return setLSB(b, bit ^ getLSB(b));
-        }
-        private bool decryptByte(byte encrypted, byte original)
-        {
-            return getLSB(encrypted) ^ getLSB(original);
-        }
-
-        private byte[] encodeDataWithLength(byte[] data)
-        {
-            byte[] length = BitConverter.GetBytes(data.Length);
-            byte[] result = new byte[data.Length + length.Length];
-            int i;
-            for (i = 0; i < 4; i++)
-                result[i] = length[i];
-            for (; i < result.Length; i++)
-                result[i] = data[i - 4];
-            return result;
-        }
-
-        public byte[] Decode(Bitmap encrypted, Bitmap original)
-        {
-            List<byte> result = new List<byte>();
-            BitArray bits = new BitArray(8);
-            int bitCounter = 0;
-
-            for (int x = 0; x < encrypted.Width; x++)
-            {
-                for (int y = 0; y < encrypted.Height; y++)
-                {
-                    Color encryptedPixel = encrypted.GetPixel(x, y);
-                    Color originalPixel = original.GetPixel(x, y);
-                    if (bitCounter == 8)
-                    {
-                        bitCounter = 0;
-                        byte[] arr = new byte[1];
-                        bits.CopyTo(arr, 0);
-                        result.Add(arr[0]);
-                    }
-                    bits.Set(bitCounter++, decryptByte(encryptedPixel.A, originalPixel.A));
-                    bits.Set(bitCounter++, decryptByte(encryptedPixel.R, originalPixel.R));
-                    bits.Set(bitCounter++, decryptByte(encryptedPixel.G, originalPixel.G));
-                    bits.Set(bitCounter++, decryptByte(encryptedPixel.B, originalPixel.B));
-                }
-            }
-            byte[] lengthB = new byte[4];
-            for (int i = 0; i < 4; i++)
-                lengthB[i] = result[i];
-            int length = BitConverter.ToInt32(lengthB, 0);
-            return result.GetRange(4, length).ToArray();
-        }
-
-        private byte setLSB(byte b, bool val)
+        private byte setLsb(byte b, bool val)
         {
             return val ? (byte)(b | 1) : (byte)(b & 254);
         }
 
-        private bool getLSB(byte b)
+        private bool getLsb(byte b)
         {
             return (b & 1) == 1;
         }
+
+        private byte encryptByte(byte b, bool k)
+        {
+            return setLsb(b, k ^ getLsb(b));
+        }
+        private bool decryptByte(byte b, byte k)
+        {
+            return getLsb(b) ^ getLsb(k);
+        }
+
+        private static Random rnd = new Random();
+        private byte encryptRandomByte(byte b)
+        {
+            return setLsb(b, rnd.Next(0, 2) == 1 ? true : false);
+        }
     }
 }
+

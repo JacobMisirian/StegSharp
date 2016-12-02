@@ -1,10 +1,21 @@
-﻿<Properties StartupItem="StegSharp/StegSharp.csproj">
+﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="StegSharp/Program.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="StegSharp/Steganography.cs">
     <Files>
-      <File FileName="StegSharp/Program.cs" Line="22" Column="63" />
-      <File FileName="StegSharp/Steganography.cs" Line="11" Column="10" />
+      <File FileName="StegSharp/Steganography.cs" Line="94" Column="47" />
+      <File FileName="StegSharp/Program.cs" Line="9" Column="65" />
+      <File FileName="StegSharp/StegSharpConfig.cs" Line="49" Column="112" />
+      <File FileName="StegSharp/StegSharpArgumentParser.cs" Line="44" Column="66" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="StegSharp" expanded="True">
+            <Node name="Steganography.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
